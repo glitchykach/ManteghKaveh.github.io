@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>دفتر منطق</title>
+<style>
+  :root{
+    --paper:#EEF1F6;
+    --grid:#CBD8EE;
+    --ink:#1B3A73;
+    --ink-dark:#122452;
+    --ink-soft:#3E5C99;
+    --text:#1C2230;
+    --text-dim:#5B6478;
+    --stamp:#B23A2E;
+    --ok:#1E7A4C;
+    --ok-bg:#E4F4EA;
+    --bad:#B23A2E;
+    --bad-bg:#FBE7E4;
+    --card:#FFFFFF;
+    --line:#D7DEEB;
+    --radius:14px;
+    --shadow:0 2px 10px rgba(27,58,115,.08);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:"Vazirmatn","IRANSans",Tahoma,"Segoe UI",Arial,sans-serif;
+    color:var(--text);
+    background:var(--paper);
+    display:flex;
+    justify-content:center;
+    min-height:100vh;
+  }
+  .phone{
+    width:100%;
+    max-width:430px;
+    min-height:100vh;
+    background-color:var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:24px 24px;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .phone::before{
+    /* notebook margin line */
+    content:"";
+    position:absolute;
+    top:0; bottom:0; right:46px;
+    width:1px;
+    background:rgba(178,58,46,.35);
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    background:linear-gradient(180deg,var(--ink) 0%, var(--ink-dark) 100%);
+    color:#fff;
+    padding:16px 18px 14px;
+    position:sticky; top:0; z-index:20;
+    box-shadow:0 2px 8px rgba(18,36,82,.25);
+  }
+  .topbar .row{display:flex; align-items:center; gap:10px;}
+  .topbar .mark{
+    font-size:22px; font-weight:700;
+    width:36px;height:36px;border-radius:10px;
+    background:rgba(255,255,255,.14);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .topbar h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.2px;}
+  .topbar p{margin:2px 0 0;font-size:12px;color:rgba(255,255,255,.72);}
+
+  /* ---------- views ---------- */
+  main{flex:1; overflow-y:auto; padding:14px 14px 90px; position:relative; z-index:1;}
+  .view{display:none;}
+  .view.active{display:block; animation:fadein .18s ease;}
+  @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  h2.section-title{
+    font-size:14px; color:var(--ink); margin:18px 0 8px; font-weight:700;
+  }
+  h2.section-title:first-child{margin-top:2px;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px;
+    margin-bottom:10px;
+    box-shadow:var(--shadow);
+  }
+
+  /* ---------- reference (learn) tab ---------- */
+  details.rule-group{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    margin-bottom:8px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  details.rule-group summary{
+    padding:12px 14px;
+    font-size:13.5px; font-weight:700; color:var(--ink-dark);
+    cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between;
+  }
+  details.rule-group summary::-webkit-details-marker{display:none;}
+  details.rule-group summary::after{
+    content:"⌄"; font-size:16px; color:var(--ink-soft); transition:transform .15s;
+  }
+  details.rule-group[open] summary::after{transform:rotate(180deg);}
+  .rule-body{padding:0 14px 12px;}
+  .eq-row{
+    direction:ltr; text-align:center;
+    font-size:14.5px;
+    background:var(--paper);
+    border:1px dashed var(--line);
+    border-radius:10px;
+    padding:8px 6px;
+    margin:6px 0;
+    color:var(--text);
+  }
+  .eq-note{
+    font-size:12px; color:var(--text-dim); margin-top:2px; direction:rtl; text-align:right;
+  }
+  .proof-note{font-size:12.5px; line-height:1.9; color:var(--text);}
+  .proof-note b{color:var(--ink-dark);}
+  .source-tag{
+    text-align:center; font-size:11px; color:var(--text-dim); margin:16px 0 6px;
+  }
+
+  /* ---------- formula field ---------- */
+  .field-label{font-size:12px; color:var(--text-dim); margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;}
+  .field-label .tag{
+    font-size:10.5px; background:var(--ink); color:#fff; padding:2px 8px; border-radius:20px;
+  }
+  .formula-box{
+    direction:ltr;
+    min-height:46px;
+    background:#fff;
+    border:2px solid var(--line);
+    border-radius:12px;
+    padding:10px 12px;
+    font-size:18px;
+    letter-spacing:1px;
+    display:flex;align-items:center;
+    color:var(--ink-dark);
+    font-weight:600;
+    transition:border-color .15s;
+    word-break:break-all;
+  }
+  .formula-box.empty{color:#9AA5BE; font-weight:400; font-size:14px;}
+  .formula-box.active{border-color:var(--ink);}
+  .field-wrap{margin-bottom:10px;}
+
+  /* ---------- keyboard ---------- */
+  .keyboard{
+    margin-top:10px;
+    background:var(--ink-dark);
+    border-radius:16px;
+    padding:10px;
+    box-shadow:var(--shadow);
+  }
+  .kbd-row{display:flex; gap:7px; margin-bottom:7px;}
+  .kbd-row:last-child{margin-bottom:0;}
+  .kbd-btn{
+    flex:1;
+    background:#2A4784;
+    color:#fff;
+    border:none;
+    border-radius:9px;
+    font-size:16px;
+    padding:11px 0;
+    font-family:inherit;
+    font-weight:600;
+    direction:ltr;
+  }
+  .kbd-btn:active{background:#1C3562; transform:scale(.95);}
+  .kbd-btn.wide{flex:1.6;}
+  .kbd-btn.op{background:#3A5EA8;}
+  .kbd-btn.danger{background:var(--stamp);}
+  .kbd-btn.util{background:#1C3562; font-size:12px;}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:block; width:100%;
+    background:var(--ink);
+    color:#fff; border:none;
+    border-radius:12px;
+    padding:12px; font-size:14px; font-weight:700;
+    font-family:inherit;
+    margin-top:10px;
+  }
+  .btn:active{background:var(--ink-dark);}
+  .btn.secondary{background:#fff; color:var(--ink); border:1.5px solid var(--ink);}
+  .btn.small{width:auto; padding:7px 14px; font-size:12.5px; display:inline-block; margin:0;}
+
+  /* ---------- results ---------- */
+  .verdict{
+    border-radius:12px; padding:12px 14px; margin:10px 0;
+    font-size:14px; font-weight:700; text-align:center;
+  }
+  .verdict.ok{background:var(--ok-bg); color:var(--ok);}
+  .verdict.bad{background:var(--bad-bg); color:var(--bad);}
+  .verdict.hint{background:#fff; color:var(--text-dim); font-weight:400; font-size:12.5px; border:1px dashed var(--line);}
+
+  table.truth{
+    width:100%; border-collapse:collapse; direction:ltr;
+    background:#fff; border-radius:10px; overflow:hidden;
+    font-size:13.5px;
+  }
+  table.truth th, table.truth td{
+    border:1px solid var(--line); text-align:center; padding:7px 4px;
+  }
+  table.truth th{background:var(--ink); color:#fff; font-weight:700;}
+  table.truth td.T{color:var(--ok); font-weight:700;}
+  table.truth td.F{color:var(--bad); font-weight:700;}
+  table.truth tr.mismatch{background:var(--bad-bg);}
+  .table-scroll{overflow-x:auto; border-radius:10px;}
+
+  /* ---------- saved list ---------- */
+  .saved-item{
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    padding:10px 12px; margin-bottom:8px; box-shadow:var(--shadow);
+  }
+  .saved-item .title{font-size:12.5px; color:var(--text-dim); margin-bottom:4px;}
+  .saved-item .expr{direction:ltr; font-size:16px; color:var(--ink-dark); font-weight:700; text-align:center; margin-bottom:8px;}
+  .saved-item .actions{display:flex; gap:8px;}
+  .text-input{
+    width:100%; border:1.5px solid var(--line); border-radius:10px;
+    padding:9px 10px; font-size:13px; font-family:inherit; color:var(--text);
+  }
+  .empty-state{text-align:center; color:var(--text-dim); font-size:13px; padding:30px 10px;}
+
+  /* ---------- tab bar ---------- */
+  .tabbar{
+    position:sticky; bottom:0; z-index:20;
+    display:flex;
+    background:#fff;
+    border-top:1px solid var(--line);
+    box-shadow:0 -2px 10px rgba(27,58,115,.08);
+  }
+  .tab-btn{
+    flex:1; background:none; border:none; padding:9px 2px 10px;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    font-family:inherit; color:var(--text-dim);
+  }
+  .tab-btn .ic{
+    font-size:18px; width:30px; height:30px; border-radius:9px;
+    display:flex; align-items:center; justify-content:center;
+    direction:ltr; font-weight:700;
+  }
+  .tab-btn span{font-size:10.5px; font-weight:600;}
+  .tab-btn.active{color:var(--ink);}
+  .tab-btn.active .ic{background:var(--ink); color:#fff;}
+
+  ::-webkit-scrollbar{width:5px; height:5px;}
+  ::-webkit-scrollbar-thumb{background:var(--grid); border-radius:5px;}
+
+  .credit-watermark{
+    position:absolute;
+    left:12px; bottom:10px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink);
+    opacity:.32;
+    filter:blur(0.4px);
+    letter-spacing:.2px;
+    pointer-events:none;
+    user-select:none;
+    z-index:50;
+  }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <div class="topbar">
+    <div class="row">
+      <div class="mark">≡</div>
+      <div>
+        <h1>دفتر منطق</h1>
+        <p>منطق گزاره‌ها · آمار و احتمال یازدهم</p>
+      </div>
+    </div>
+  </div>
+
+  <main id="views">
+
+    <!-- ================= LEARN TAB ================= -->
+    <section class="view active" id="view-learn">
+      <h2 class="section-title">تعریف‌های پایه</h2>
+      <div class="card proof-note">
+        <b>¬P</b> نقیض P — وقتی درست است که P نادرست باشد.<br>
+        <b>P∧Q</b> عطف — فقط وقتی درست است که هر دو درست باشند.<br>
+        <b>P∨Q</b> فصل — وقتی درست است که دست‌کم یکی درست باشد.<br>
+        <b>P⇒Q</b> شرطی — فقط وقتی نادرست است که P درست و Q نادرست باشد.<br>
+        <b>P⇔Q</b> دوشرطی — وقتی درست است که ارزش P و Q یکسان باشد.
+      </div>
+
+      <h2 class="section-title">همارزی‌های پایه</h2>
+      <details class="rule-group" open>
+        <summary>خنثی، غالب، خودتوان، متمم</summary>
+        <div class="rule-body">
+          <div class="eq-row">P ∨ F ≡ P</div>
+          <div class="eq-row">P ∧ T ≡ P</div>
+          <div class="eq-row">P ∨ T ≡ T</div>
+          <div class="eq-row">P ∧ F ≡ F</div>
+          <div class="eq-row">P ∨ P ≡ P</div>
+          <div class="eq-row">P ∧ P ≡ P</div>
+          <div class="eq-row">P ∨ ¬P ≡ T</div>
+          <div class="eq-row">P ∧ ¬P ≡ F</div>
+          <div class="eq-row">¬(¬P) ≡ P</div>
+        </div>
+      </details>
+
+      <details class="rule-group">
+        <summary>جابجایی و شرکت‌پذیری</summary>
+        <div class="rule-body">
+          <div class="eq-row">P ∨ Q ≡ Q ∨ P</div>
+          <div class="eq-row">P ∧ Q ≡ Q ∧ P</div>
+          <div class="eq-row">P ∨ (Q ∨ R) ≡ (P ∨ Q) ∨ R</div>
+          <div class="eq-row">P ∧ (Q ∧ R) ≡ (P ∧ Q) ∧ R</div>
+        </div>
+      </details>
+
+      <details class="rule-group">
+        <summary>دمورگان</summary>
+        <div class="rule-body">
+          <div class="eq-row">¬(P ∨ Q) ≡ ¬P ∧ ¬Q</div>
+          <div class="eq-row">¬(P ∧ Q) ≡ ¬P ∨ ¬Q</div>
+        </div>
+      </details>
+
+      <details class="rule-group">
+        <summary>پخش (توزیع)</summary>
+        <div class="rule-body">
+          <div class="eq-row">P ∨ (Q ∧ R) ≡ (P∨Q) ∧ (P∨R)</div>
+          <div class="eq-row">P ∧ (Q ∨ R) ≡ (P∧Q) ∨ (P∧R)</div>
+        </div>
+      </details>
+
+      <details class="rule-group">
+        <summary>جذب</summary>
+        <div class="rule-body">
+          <div class="eq-row">P ∨ (P ∧ Q) ≡ P</div>
+          <div class="eq-row">P ∧ (P ∨ Q) ≡ P</div>
+        </div>
+      </details>
+
+      <details class="rule-group">
+        <summary>گزارهٔ شرطی: معکوس، نقیض، عکسِ‌نقیض</summary>
+        <div class="rule-body proof-note">
+          برای شرطی <b>P⇒Q</b> سه گزارهٔ وابسته داریم:
+          <div class="eq-row">معکوس: Q ⇒ P</div>
+          <div class="eq-row">نقیض: ¬P ⇒ ¬Q</div>
+          <div class="eq-row">عکسِ نقیض: ¬Q ⇒ ¬P</div>
+          <div class="eq-note">فقط عکسِ نقیض با خودِ گزارهٔ شرطی هم‌ارز است: P⇒Q ≡ ¬Q⇒¬P — معکوس و نقیض هم‌ارز <b>نیستند</b>.</div>
+        </div>
+      </details>
+
+      <details class="rule-group">
+        <summary>همارزی‌های دیگر شرطی</summary>
+        <div class="rule-body">
+          <div class="eq-row">P ⇒ Q ≡ ¬P ∨ Q</div>
+          <div class="eq-row">¬(P ⇒ Q) ≡ P ∧ ¬Q</div>
+          <div class="eq-row">[(P∧Q)⇒R] ≡ P⇒(Q⇒R)</div>
+        </div>
+      </details>
+
+      <details class="rule-group">
+        <summary>همارزی‌های دوشرطی</summary>
+        <div class="rule-body">
+          <div class="eq-row">P⇔Q ≡ (P⇒Q) ∧ (Q⇒P)</div>
+          <div class="eq-row">P⇔Q ≡ (P∧Q) ∨ (¬P∧¬Q)</div>
+          <div class="eq-row">P⇔Q ≡ ¬P⇔¬Q</div>
+          <div class="eq-row">¬(P⇔Q) ≡ ¬P⇔Q ≡ P⇔¬Q</div>
+        </div>
+      </details>
+
+      <details class="rule-group">
+        <summary>پخشِ پیشرفته با ⇒</summary>
+        <div class="rule-body">
+          <div class="eq-row">[P∨(Q⇒R)] ≡ (P∨Q)⇒(P∨R)</div>
+          <div class="eq-row">[P⇒(Q∨R)] ≡ (P⇒Q) ∨ (P⇒R)</div>
+          <div class="eq-row">[P⇒(Q∧R)] ≡ (P⇒Q) ∧ (P⇒R)</div>
+          <div class="eq-row">[(P∨Q)⇒R] ≡ (P⇒R) ∧ (Q⇒R)</div>
+          <div class="eq-row">[(P∧Q)⇒R] ≡ (P⇒R) ∨ (Q⇒R)</div>
+        </div>
+      </details>
+
+      <h2 class="section-title">روش اثبات با عکسِ نقیض</h2>
+      <div class="card proof-note">
+        چون P⇒Q هم‌ارزِ ¬Q⇒¬P است، برای اثبات «اگر P آنگاه Q» می‌توان به‌جایش «اگر ¬Q آنگاه ¬P» را اثبات کرد. برای نمونه:<br><br>
+        <b>مثال ۱ —</b> اگر مجذور عدد صحیح a فرد باشد، خودِ a فرد است. عکسِ نقیض: اگر a زوج باشد (a=2k)، آنگاه a²=4k²=2(2k²) نیز زوج است؛ پس اثبات کامل می‌شود.<br><br>
+        <b>مثال ۲ —</b> اگر مجذور a مضربِ ۳ باشد، خودِ a مضربِ ۳ است. عکسِ نقیض: اگر a مضربِ ۳ نباشد (a=3k+1 یا a=3k+2)، آنگاه a² هم مضربِ ۳ نیست.
+      </div>
+      <div class="source-tag">منبع محتوا: جزوهٔ منطق — دبیرستان البرز (فیض)</div>
+    </section>
+
+    <!-- ================= TRUTH TABLE TAB ================= -->
+    <section class="view" id="view-table">
+      <h2 class="section-title">جدول ارزش</h2>
+      <div class="card">
+        <div class="field-label"><span>عبارت</span><span class="tag">p q r s</span></div>
+        <div class="formula-box empty" id="disp-table" data-field="table">عبارت را با صفحه‌کلید زیر بسازید…</div>
+        <div class="keyboard" data-target="table" id="kbd-table"></div>
+        <button class="btn" id="btn-clear-table">پاک‌کردن عبارت</button>
+      </div>
+      <div id="result-table"></div>
+    </section>
+
+    <!-- ================= EQUIVALENCE TAB ================= -->
+    <section class="view" id="view-equiv">
+      <h2 class="section-title">بررسی هم‌ارزی دو عبارت</h2>
+      <div class="card">
+        <div class="field-label"><span>عبارت اول (A)</span></div>
+        <div class="formula-box empty active" id="disp-equivA" data-field="equivA">لمس کنید و بسازید…</div>
+        <div class="field-label" style="margin-top:12px;"><span>عبارت دوم (B)</span></div>
+        <div class="formula-box empty" id="disp-equivB" data-field="equivB">لمس کنید و بسازید…</div>
+        <div class="keyboard" data-target="dynamic" data-active-target="equivA" id="kbd-equiv"></div>
+        <button class="btn secondary" id="btn-clear-equiv">پاک‌کردن عبارت فعال</button>
+      </div>
+      <div id="result-equiv"></div>
+    </section>
+
+    <!-- ================= SAVED TAB ================= -->
+    <section class="view" id="view-saved">
+      <h2 class="section-title">افزودن عبارت به مجموعهٔ من</h2>
+      <div class="card">
+        <div class="field-label"><span>عنوان (اختیاری)</span></div>
+        <input class="text-input" id="input-title" placeholder="مثلاً: دمورگان تمرین ۳" style="margin-bottom:10px;">
+        <div class="field-label"><span>عبارت</span></div>
+        <div class="formula-box empty" id="disp-saved" data-field="saved">لمس کنید و بسازید…</div>
+        <div class="keyboard" data-target="saved" id="kbd-saved"></div>
+        <button class="btn" id="btn-add-saved">➕ افزودن به مجموعه</button>
+      </div>
+      <h2 class="section-title">مجموعهٔ من</h2>
+      <div id="saved-list"></div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-tab="learn"><span class="ic">∴</span><span>آموزش</span></button>
+    <button class="tab-btn" data-tab="table"><span class="ic">▦</span><span>جدول ارزش</span></button>
+    <button class="tab-btn" data-tab="equiv"><span class="ic">⇔</span><span>هم‌ارزی</span></button>
+    <button class="tab-btn" data-tab="saved"><span class="ic">★</span><span>مجموعه من</span></button>
+  </nav>
+
+  <div class="credit-watermark">سازنده: کاوه ادیبی</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ LOGIC ENGINE ============ */
+  function tokenize(str){
+    const tokens=[];
+    for(const ch of str){
+      if(ch===' ') continue;
+      if('pqrs'.includes(ch)) tokens.push({t:'VAR',v:ch});
+      else if(ch==='¬') tokens.push({t:'NOT'});
+      else if(ch==='∧') tokens.push({t:'AND'});
+      else if(ch==='∨') tokens.push({t:'OR'});
+      else if(ch==='⇒') tokens.push({t:'IMP'});
+      else if(ch==='⇔') tokens.push({t:'IFF'});
+      else if(ch==='(') tokens.push({t:'LP'});
+      else if(ch===')') tokens.push({t:'RP'});
+      else if(ch==='T') tokens.push({t:'TRUE'});
+      else if(ch==='F') tokens.push({t:'FALSE'});
+      else throw new Error('bad');
+    }
+    return tokens;
+  }
+  function parse(tokens){
+    let pos=0;
+    const peek=()=>tokens[pos];
+    const next=()=>tokens[pos++];
+    function expect(t){const tok=next(); if(!tok||tok.t!==t) throw new Error('invalid');}
+    function parseIff(){let l=parseImp(); while(peek()&&peek().t==='IFF'){next(); l={t:'iff',l,r:parseImp()};} return l;}
+    function parseImp(){let l=parseOr(); if(peek()&&peek().t==='IMP'){next(); return {t:'imp',l,r:parseImp()};} return l;}
+    function parseOr(){let l=parseAnd(); while(peek()&&peek().t==='OR'){next(); l={t:'or',l,r:parseAnd()};} return l;}
+    function parseAnd(){let l=parseNot(); while(peek()&&peek().t==='AND'){next(); l={t:'and',l,r:parseNot()};} return l;}
+    function parseNot(){ if(peek()&&peek().t==='NOT'){next(); return {t:'not',a:parseNot()};} return parseAtom();}
+    function parseAtom(){
+      const tok=peek();
+      if(!tok) throw new Error('empty');
+      if(tok.t==='VAR'){next(); return {t:'var',name:tok.v};}
+      if(tok.t==='TRUE'){next(); return {t:'const',v:true};}
+      if(tok.t==='FALSE'){next(); return {t:'const',v:false};}
+      if(tok.t==='LP'){next(); const e=parseIff(); expect('RP'); return e;}
+      throw new Error('invalid');
+    }
+    if(tokens.length===0) throw new Error('empty');
+    const ast=parseIff();
+    if(pos!==tokens.length) throw new Error('invalid');
+    return ast;
+  }
+  function getVars(str){
+    const set=new Set();
+    for(const ch of str) if('pqrs'.includes(ch)) set.add(ch);
+    return ['p','q','r','s'].filter(v=>set.has(v));
+  }
+  function evalAst(node,env){
+    switch(node.t){
+      case 'var': return env[node.name];
+      case 'const': return node.v;
+      case 'not': return !evalAst(node.a,env);
+      case 'and': return evalAst(node.l,env) && evalAst(node.r,env);
+      case 'or': return evalAst(node.l,env) || evalAst(node.r,env);
+      case 'imp': return (!evalAst(node.l,env)) || evalAst(node.r,env);
+      case 'iff': return evalAst(node.l,env) === evalAst(node.r,env);
+    }
+  }
+  function bitsFor(i,n,idx){ const total=1<<n; const k=total-1-i; return !!((k>>(n-idx-1))&1); }
+
+  function buildAst(str){ return parse(tokenize(str)); }
+
+  function classify(rows){
+    const allT = rows.every(r=>r.val===true);
+    const allF = rows.every(r=>r.val===false);
+    if(allT) return {label:'قضیهٔ همانگو (Tautology) — همواره درست', cls:'ok'};
+    if(allF) return {label:'تناقض (Contradiction) — همواره نادرست', cls:'bad'};
+    return {label:'ممکن‌الصدق — بسته به مقدار p,q,… درست یا نادرست است', cls:'hint'};
+  }
+
+  /* ============ STATE ============ */
+  const state = { fields:{ table:'', equivA:'', equivB:'', saved:'' } };
+  let savedList = [];
+
+  /* ============ KEYBOARD BUILD ============ */
+  const KEYS = [
+    ['p','q','r','s'],
+    ['¬','∧','∨','⇒'],
+    ['⇔','(',')','T'],
+  ];
+  function buildKeyboard(el){
+    el.innerHTML='';
+    KEYS.forEach(row=>{
+      const r=document.createElement('div'); r.className='kbd-row';
+      row.forEach(sym=>{
+        const b=document.createElement('button');
+        b.type='button';
+        b.className='kbd-btn'+((['¬','∧','∨','⇒','⇔'].includes(sym))?' op':'');
+        b.textContent=sym;
+        b.dataset.token=sym;
+        r.appendChild(b);
+      });
+      el.appendChild(r);
+    });
+    const last=document.createElement('div'); last.className='kbd-row';
+    const fBtn=document.createElement('button'); fBtn.type='button'; fBtn.className='kbd-btn'; fBtn.textContent='F'; fBtn.dataset.token='F';
+    const back=document.createElement('button'); back.type='button'; back.className='kbd-btn wide danger'; back.textContent='⌫ حذف'; back.dataset.action='back';
+    const clr=document.createElement('button'); clr.type='button'; clr.className='kbd-btn util'; clr.textContent='پاک'; clr.dataset.action='clear';
+    last.appendChild(fBtn); last.appendChild(back); last.appendChild(clr);
+    el.appendChild(last);
+  }
+  buildKeyboard(document.getElementById('kbd-table'));
+  buildKeyboard(document.getElementById('kbd-equiv'));
+  buildKeyboard(document.getElementById('kbd-saved'));
+
+  function renderField(name){
+    const disp=document.getElementById('disp-'+name);
+    if(!disp) return;
+    const val=state.fields[name];
+    disp.textContent = val || placeholderFor(name);
+    disp.classList.toggle('empty', !val);
+  }
+  function placeholderFor(name){
+    if(name==='equivA'||name==='equivB'||name==='saved'||name==='table') return 'لمس کنید و بسازید…';
+    return '';
+  }
+  function renderAllFields(){ Object.keys(state.fields).forEach(renderField); }
+
+  function applyToken(field, token){
+    state.fields[field]+=token;
+    renderField(field);
+    onFieldChanged(field);
+  }
+  function backspace(field){
+    state.fields[field]=state.fields[field].slice(0,-1);
+    renderField(field);
+    onFieldChanged(field);
+  }
+  function clearField(field){
+    state.fields[field]='';
+    renderField(field);
+    onFieldChanged(field);
+  }
+
+  function onFieldChanged(field){
+    if(field==='table') computeTable();
+    if(field==='equivA'||field==='equivB') computeEquiv();
+  }
+
+  /* keyboard delegation */
+  document.addEventListener('click', function(e){
+    const btn=e.target.closest('.kbd-btn');
+    if(btn){
+      const wrapper=btn.closest('.keyboard');
+      let target=wrapper.dataset.target;
+      if(target==='dynamic') target=wrapper.dataset.activeTarget;
+      if(btn.dataset.action==='back') backspace(target);
+      else if(btn.dataset.action==='clear') clearField(target);
+      else if(btn.dataset.token) applyToken(target, btn.dataset.token);
+      return;
+    }
+    const dispA=e.target.closest('#disp-equivA');
+    const dispB=e.target.closest('#disp-equivB');
+    if(dispA||dispB){
+      const kb=document.getElementById('kbd-equiv');
+      kb.dataset.activeTarget = dispA ? 'equivA':'equivB';
+      document.getElementById('disp-equivA').classList.toggle('active', !!dispA);
+      document.getElementById('disp-equivB').classList.toggle('active', !!dispB);
+    }
+  });
+
+  document.getElementById('btn-clear-table').addEventListener('click', ()=>clearField('table'));
+  document.getElementById('btn-clear-equiv').addEventListener('click', ()=>{
+    const kb=document.getElementById('kbd-equiv');
+    clearField(kb.dataset.activeTarget);
+  });
+
+  /* ============ TRUTH TABLE VIEW ============ */
+  function computeTable(){
+    const box=document.getElementById('result-table');
+    const str=state.fields.table;
+    if(!str){ box.innerHTML=''; return; }
+    let ast, vars;
+    try{
+      vars=getVars(str);
+      ast=buildAst(str);
+    }catch(err){
+      box.innerHTML='<div class="verdict hint">عبارت را کامل کنید تا جدول ساخته شود.</div>';
+      return;
+    }
+    if(vars.length===0){
+      box.innerHTML='<div class="verdict hint">دست‌کم یک متغیر (p, q, r یا s) وارد کنید.</div>';
+      return;
+    }
+    const n=vars.length;
+    const rows=[];
+    for(let i=0;i<(1<<n);i++){
+      const env={};
+      vars.forEach((v,idx)=>{ env[v]=bitsFor(i,n,idx); });
+      rows.push({env, val:evalAst(ast,env)});
+    }
+    const info=classify(rows);
+    let html='<div class="table-scroll"><table class="truth"><thead><tr>';
+    vars.forEach(v=>html+='<th>'+v+'</th>');
+    html+='<th>'+escapeHtml(str)+'</th></tr></thead><tbody>';
+    rows.forEach(r=>{
+      html+='<tr>';
+      vars.forEach(v=>html+='<td class="'+(r.env[v]?'T':'F')+'">'+(r.env[v]?'T':'F')+'</td>');
+      html+='<td class="'+(r.val?'T':'F')+'">'+(r.val?'T':'F')+'</td></tr>';
+    });
+    html+='</tbody></table></div>';
+    html='<div class="verdict '+info.cls+'">'+info.label+'</div>'+html;
+    box.innerHTML=html;
+  }
+
+  /* ============ EQUIVALENCE VIEW ============ */
+  function computeEquiv(){
+    const box=document.getElementById('result-equiv');
+    const a=state.fields.equivA, b=state.fields.equivB;
+    if(!a || !b){ box.innerHTML=''; return; }
+    let astA, astB, vars;
+    try{
+      astA=buildAst(a); astB=buildAst(b);
+      vars=['p','q','r','s'].filter(v=> getVars(a).includes(v) || getVars(b).includes(v));
+    }catch(err){
+      box.innerHTML='<div class="verdict hint">هر دو عبارت را کامل کنید.</div>';
+      return;
+    }
+    if(vars.length===0){
+      box.innerHTML='<div class="verdict hint">دست‌کم یک متغیر وارد کنید.</div>';
+      return;
+    }
+    const n=vars.length;
+    let allMatch=true;
+    const rows=[];
+    for(let i=0;i<(1<<n);i++){
+      const env={};
+      vars.forEach((v,idx)=>{ env[v]=bitsFor(i,n,idx); });
+      const va=evalAst(astA,env), vb=evalAst(astB,env);
+      if(va!==vb) allMatch=false;
+      rows.push({env, va, vb, match: va===vb});
+    }
+    let html='<div class="verdict '+(allMatch?'ok':'bad')+'">'+
+      (allMatch ? '✓ دو عبارت هم‌ارز هستند (A ≡ B)' : '✗ دو عبارت هم‌ارز نیستند')+
+      '</div>';
+    html+='<div class="table-scroll"><table class="truth"><thead><tr>';
+    vars.forEach(v=>html+='<th>'+v+'</th>');
+    html+='<th>A</th><th>B</th></tr></thead><tbody>';
+    rows.forEach(r=>{
+      html+='<tr class="'+(r.match?'':'mismatch')+'">';
+      vars.forEach(v=>html+='<td class="'+(r.env[v]?'T':'F')+'">'+(r.env[v]?'T':'F')+'</td>');
+      html+='<td class="'+(r.va?'T':'F')+'">'+(r.va?'T':'F')+'</td>';
+      html+='<td class="'+(r.vb?'T':'F')+'">'+(r.vb?'T':'F')+'</td>';
+      html+='</tr>';
+    });
+    html+='</tbody></table></div>';
+    box.innerHTML=html;
+  }
+
+  function escapeHtml(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  /* ============ SAVED (persistent storage) ============ */
+  async function loadSaved(){
+    try{
+      const res = await window.storage.get('saved-expressions', false);
+      savedList = res && res.value ? JSON.parse(res.value) : [];
+    }catch(err){ savedList=[]; }
+    renderSavedList();
+  }
+  async function persistSaved(){
+    try{ await window.storage.set('saved-expressions', JSON.stringify(savedList), false); }
+    catch(err){ /* best effort */ }
+  }
+  function renderSavedList(){
+    const wrap=document.getElementById('saved-list');
+    if(!savedList.length){
+      wrap.innerHTML='<div class="empty-state">هنوز چیزی اضافه نکرده‌اید.<br>یک عبارت بسازید و «افزودن به مجموعه» را بزنید.</div>';
+      return;
+    }
+    wrap.innerHTML='';
+    savedList.slice().reverse().forEach(item=>{
+      const div=document.createElement('div');
+      div.className='saved-item';
+      div.innerHTML =
+        '<div class="title">'+(item.title? escapeHtml(item.title):'بدون عنوان')+'</div>'+
+        '<div class="expr">'+escapeHtml(item.expr)+'</div>'+
+        '<div class="actions">'+
+          '<button class="btn small secondary" data-act="table" data-id="'+item.id+'">به جدول ارزش</button>'+
+          '<button class="btn small secondary" data-act="equivA" data-id="'+item.id+'">به هم‌ارزی A</button>'+
+          '<button class="btn small danger-txt" data-act="del" data-id="'+item.id+'" style="background:var(--bad-bg);color:var(--bad);border:none;">حذف</button>'+
+        '</div>';
+      wrap.appendChild(div);
+    });
+  }
+  document.getElementById('saved-list').addEventListener('click', function(e){
+    const btn=e.target.closest('button[data-act]');
+    if(!btn) return;
+    const id=btn.dataset.id;
+    const item=savedList.find(x=>String(x.id)===String(id));
+    if(!item) return;
+    if(btn.dataset.act==='del'){
+      savedList=savedList.filter(x=>String(x.id)!==String(id));
+      persistSaved(); renderSavedList();
+    } else if(btn.dataset.act==='table'){
+      state.fields.table=item.expr; renderField('table'); computeTable();
+      switchTab('table');
+    } else if(btn.dataset.act==='equivA'){
+      state.fields.equivA=item.expr; renderField('equivA'); computeEquiv();
+      switchTab('equiv');
+    }
+  });
+  document.getElementById('btn-add-saved').addEventListener('click', async function(){
+    const expr=state.fields.saved;
+    if(!expr) return;
+    const title=document.getElementById('input-title').value.trim();
+    savedList.push({id:Date.now(), title, expr});
+    await persistSaved();
+    state.fields.saved=''; renderField('saved');
+    document.getElementById('input-title').value='';
+    renderSavedList();
+    switchTab('saved');
+  });
+
+  /* ============ TABS ============ */
+  function switchTab(name){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-'+name).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+    document.getElementById('views').scrollTop=0;
+  }
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.addEventListener('click', ()=>switchTab(b.dataset.tab));
+  });
+
+  /* ============ INIT ============ */
+  renderAllFields();
+  loadSaved();
+})();
+</script>
+</body>
+</html>
